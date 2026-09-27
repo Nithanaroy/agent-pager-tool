@@ -106,6 +106,27 @@ Auto-approve the page command so the agent never blocks on paging you. In `setti
 Start a new chat session so VS Code loads the hook. To check, run **Chat: Configure Hooks** and
 look for `agent-pager.json`.
 
+#### The 60s countdown hook
+
+`install.sh` sets it up for you. It fills in [hooks/agent-pager.template.json](hooks/agent-pager.template.json)
+with the absolute path of your clone and writes the result to `~/.copilot/hooks/agent-pager.json`,
+which VS Code loads for every workspace. The repo only holds the template, so nobody's personal
+paths get committed.
+
+To set it up by hand instead, replace `__REPO__` with your clone's absolute path:
+
+```bash
+mkdir -p ~/.copilot/hooks
+sed "s|__REPO__|$PWD|g" hooks/agent-pager.template.json > ~/.copilot/hooks/agent-pager.json
+```
+
+To scope it to one project instead of all of them, put the same file in that project's
+`.github/hooks/` folder. To turn it off, delete `~/.copilot/hooks/agent-pager.json`.
+
+The hook reacts to four events: `PreToolUse` starts a 60s timer for quick tools,
+`PostToolUse` cancels it when the tool finishes, and `Stop` and `UserPromptSubmit` clear any leftover
+timers. Timers and a log live in `~/.config/agent-notify/` (`pending/`, `agent-notify.log`).
+
 ## Usage
 
 ```bash
@@ -125,6 +146,7 @@ look for `agent-pager.json`.
 | `notify.py` | Sender CLI (`send`, `register`) and the hook entrypoint (`hook`) |
 | `page` | Short wrapper for `notify.py send`, linked at `~/.config/agent-notify/page` |
 | `install.sh` | Sets up the venv, links, and the hook config |
+| `hooks/agent-pager.template.json` | VS Code hook config template (`install.sh` fills in the path) |
 | `skill/SKILL.md` | Agent skill: when and how to page. Put machine-specific notes in `skill/local.md` (gitignored) |
 | `web/` | The PWA: page, service worker, manifest, Firebase web config |
 

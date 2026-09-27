@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      { "type": "command", "command": "__REPO__/.venv/bin/python __REPO__/notify.py hook", "timeout": 10 }
+    ],
+    "PostToolUse": [
+      { "type": "command", "command": "__REPO__/.venv/bin/python __REPO__/notify.py hook", "timeout": 10 }
+    ],
+    "Stop": [
+      { "type": "command", "command": "__REPO__/.venv/bin/python __REPO__/notify.py hook", "timeout": 10 }
+    ],
+    "UserPromptSubmit": [
+      { "type": "command", "command": "__REPO__/.venv/bin/python __REPO__/notify.py hook", "timeout": 10 }
+    ]
+  }
+}

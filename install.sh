@@ -24,13 +24,7 @@ ln -sfn "$REPO/skill" "$HOME/.claude/skills/agent-pager"
 
 HOOK_FILE="$HOME/.copilot/hooks/agent-pager.json"
 rm -f "$HOOK_FILE"
-"$REPO/.venv/bin/python" -c '
-import json, sys
-cmd = f"{sys.argv[1]}/.venv/bin/python {sys.argv[1]}/notify.py hook"
-entry = [{"type": "command", "command": cmd, "timeout": 10}]
-events = ["PreToolUse", "PostToolUse", "Stop", "UserPromptSubmit"]
-json.dump({"hooks": {e: entry for e in events}}, open(sys.argv[2], "w"), indent=2)
-' "$REPO" "$HOOK_FILE"
+sed "s|__REPO__|$REPO|g" "$REPO/hooks/agent-pager.template.json" > "$HOOK_FILE"
 
 echo "Installed:"
 echo "  $CFG/page -> $REPO/page"
