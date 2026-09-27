@@ -56,6 +56,14 @@ You need: a Google account, Python 3, Node 18+ (only for deploying), and an iPho
 
    This key can send messages as your project. `.gitignore` excludes it; never force-add it.
    To keep it elsewhere, set `AGENT_NOTIFY_KEY=/path/to/key.json`.
+5. Lock down the public web API key so nobody else can use your project's quota with it.
+   Google Cloud console -> APIs & Services -> Credentials -> "Browser key (auto created by Firebase)":
+   - Application restrictions: **Websites**, add `https://<project-id>.web.app/*` and
+     `https://<project-id>.firebaseapp.com/*`.
+   - API restrictions: **Restrict key**, keep only **FCM Registration API** and
+     **Firebase Installations API** (the only two the PWA calls). Click OK, then Save.
+
+   Sending is unaffected: `notify.py` authenticates with the service account, not this key.
 
 ### 2. Install on the laptop
 
