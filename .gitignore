@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.firebase/
+service-account*.json
+*-firebase-adminsdk-*.json
+skill/local.md

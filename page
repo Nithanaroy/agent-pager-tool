@@ -1,0 +1,6 @@
+#!/bin/sh
+# Agent Pager entrypoint. Symlink it to ~/.config/agent-notify/page: a short, space-free path
+# that VS Code can auto-approve.
+# Usage: page TITLE [BODY] [--link HTTPS_URL] [--device NAME]
+DIR=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+exec "$DIR/.venv/bin/python" "$DIR/notify.py" send "$@"
