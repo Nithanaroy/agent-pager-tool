@@ -85,6 +85,21 @@ async function main() {
 }
 
 window.addEventListener("hashchange", showMessage);
+
+// Tapped notification while the app was already open: the service worker posts the message.
+const setHash = (hash) => { if (hash && hash !== location.hash) location.hash = hash; };
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data && e.data.type === "pager-message") setHash(e.data.hash);
+  });
+}
+async function loadLastTapped() {
+  if (!("caches" in window)) return;
+  const res = await (await caches.open("pager")).match("/__last");
+  if (res) setHash(await res.text());
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadLastTapped(); });
+
 $("msgCopy").onclick = async () => {
   await navigator.clipboard.writeText(`${$("msgTitle").textContent}\n\n${$("msgBody").textContent}`);
   setStatus("Message copied.");
@@ -96,3 +111,4 @@ $("copy").onclick = async () => {
 $("share").onclick = () => navigator.share && navigator.share({ text: $("token").value });
 
 main().catch((e) => setStatus(`Error: ${e.message}`));
+if (!location.hash) loadLastTapped();

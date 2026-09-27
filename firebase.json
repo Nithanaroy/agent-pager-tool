@@ -4,7 +4,7 @@
     "ignore": ["**/.*"],
     "headers": [
       {
-        "source": "/@(firebase-messaging-sw.js|config.js|app.js)",
+        "source": "**",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       }
     ]

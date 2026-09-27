@@ -4,22 +4,7 @@
 Tapping a notification opens the Pager web app with the FULL message (carried in the URL
 fragment, which never reaches the server), so messages aren't limited to lock-screen length.
 
-Setup (one time):
-  1. Firebase console: create a project, add a Web app, put its config in web/config.js.
-     Project settings -> Cloud Messaging -> Web Push certificates -> generate key pair -> VAPID_KEY.
-  2. Project settings -> Service accounts -> Generate new private key, then
-       mkdir -p ~/.config/agent-notify && mv <key>.json ~/.config/agent-notify/service-account.json
-       chmod 600 ~/.config/agent-notify/service-account.json      (keep it out of git)
-  3. python3 -m venv .venv && .venv/bin/pip install google-auth requests
-  4. Deploy the web app (Firebase Hosting, free Spark plan):
-       GOOGLE_APPLICATION_CREDENTIALS=~/.config/agent-notify/service-account.json \
-         npx -y firebase-tools@latest deploy --only hosting --project <project-id> --non-interactive
-  5. iPhone (iOS 16.4+): open https://<project-id>.web.app in Safari -> Share -> Add to Home Screen.
-     Open Pager from the home screen -> Allow notifications -> Share the token to the Mac:
-       .venv/bin/python notify.py register <token> --name iphone
-  6. ln -s "$PWD/page" ~/.config/agent-notify/page         (agents call this; auto-approve it)
-     ln -s "$PWD/skill" ~/.claude/skills/agent-pager         (agent-driven paging)
-     ln -s "$PWD/hooks/agent-pager.json" ~/.copilot/hooks/   (60s countdown for quick tools)
+Setup: see README.md (Firebase project, ./install.sh, deploy web/, register the phone).
 
 Usage:
   notify.py send TITLE [BODY] [--link HTTPS_URL] [--device NAME]
@@ -37,7 +22,8 @@ import time
 from pathlib import Path
 
 HOME = Path(os.environ.get("AGENT_NOTIFY_HOME", "~/.config/agent-notify")).expanduser()
-SA_KEY = HOME / "service-account.json"
+# Private key lives next to this file (gitignored). Override with AGENT_NOTIFY_KEY.
+SA_KEY = Path(os.environ.get("AGENT_NOTIFY_KEY", Path(__file__).resolve().parent / "service-account.json"))
 TOKENS = HOME / "tokens.json"
 PENDING = HOME / "pending"
 LOG = HOME / "agent-notify.log"
