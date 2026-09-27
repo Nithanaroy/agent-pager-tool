@@ -145,6 +145,9 @@ def hook():
     kind = event.get("hook_event_name")
     tool_use_id = event.get("tool_use_id")
     session = event.get("session_id")
+    # Breadcrumb for "is the hook even running?" checks.
+    (HOME / "last-event.json").write_text(json.dumps(
+        {"at": time.strftime("%F %T"), "event": kind, "tool": event.get("tool_name"), "has_id": bool(tool_use_id)}))
 
     if kind == "PreToolUse":
         # A later tool call means earlier ones already finished (PostToolUse never fires for

@@ -32,6 +32,7 @@ function showMessage() {
 
 async function registerToken() {
   const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  swReg.update().catch(() => {});  // pick up a new service worker right away
   await navigator.serviceWorker.ready;
   const messaging = getMessaging(initializeApp(self.FIREBASE_CONFIG));
   const token = await getToken(messaging, { vapidKey: self.VAPID_KEY, serviceWorkerRegistration: swReg });
@@ -86,19 +87,46 @@ async function main() {
 
 window.addEventListener("hashchange", showMessage);
 
-// Tapped notification while the app was already open: the service worker posts the message.
+// Inbox: the service worker saves every message as it arrives (see firebase-messaging-sw.js).
 const setHash = (hash) => { if (hash && hash !== location.hash) location.hash = hash; };
+let newestSeen = null;
+
+async function readInbox() {
+  if (!("caches" in window)) return [];
+  const res = await (await caches.open("pager")).match("/__inbox");
+  return res ? res.json() : [];
+}
+
+function renderInbox(list) {
+  const ul = $("inbox");
+  ul.textContent = "";
+  $("inboxBox").hidden = list.length === 0;
+  for (const hash of list) {
+    let msg;
+    try { msg = decodeMessage(hash); } catch (e) { continue; }
+    const li = document.createElement("li");
+    const when = msg.ts ? new Date(msg.ts * 1000).toLocaleString() : "";
+    li.textContent = `${msg.t || "(no title)"}  -  ${when}`;
+    li.onclick = () => { setHash(hash); window.scrollTo(0, 0); };
+    ul.appendChild(li);
+  }
+}
+
+// On open or when brought back to the front: show the newest message if it's new to us.
+async function refreshInbox({ onOpen = false } = {}) {
+  const list = await readInbox();
+  renderInbox(list);
+  const newest = list[0];
+  if (newest && (newest !== newestSeen) && (!onOpen || !location.hash)) setHash(newest);
+  newestSeen = newest || newestSeen;
+}
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (e) => {
-    if (e.data && e.data.type === "pager-message") setHash(e.data.hash);
+    if (e.data && e.data.type === "pager-message") { setHash(e.data.hash); refreshInbox(); }
   });
 }
-async function loadLastTapped() {
-  if (!("caches" in window)) return;
-  const res = await (await caches.open("pager")).match("/__last");
-  if (res) setHash(await res.text());
-}
-document.addEventListener("visibilitychange", () => { if (!document.hidden) loadLastTapped(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshInbox(); });
 
 $("msgCopy").onclick = async () => {
   await navigator.clipboard.writeText(`${$("msgTitle").textContent}\n\n${$("msgBody").textContent}`);
@@ -111,4 +139,4 @@ $("copy").onclick = async () => {
 $("share").onclick = () => navigator.share && navigator.share({ text: $("token").value });
 
 main().catch((e) => setStatus(`Error: ${e.message}`));
-if (!location.hash) loadLastTapped();
+refreshInbox({ onOpen: true });
