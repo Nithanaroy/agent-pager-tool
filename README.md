@@ -152,6 +152,11 @@ timers. Timers and a log live in `~/.config/agent-notify/` (`pending/`, `agent-n
 
 ## Limitations
 
+- Organizations can turn off VS Code hooks (`chat.useHooks` shows as managed by your
+  organization). Then the 60s countdown never runs, and turning on `chat.useClaudeHooks`
+  may not help either. Paging still works through the skill, where the agent pages you
+  before a blocking step. To check whether the hook runs at all, look for
+  `~/.config/agent-notify/last-event.json`: the hook updates it on every event.
 - The hook only knows a tool is pending, not why. 60s is a safe bet for quick tools only.
 - VS Code's Local agent has no "permission prompt shown" hook event. Copilot CLI has one
   (`notification` with `notification_type: permission_prompt`), which could replace the
